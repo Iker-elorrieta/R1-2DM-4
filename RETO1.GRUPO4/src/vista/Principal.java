@@ -5,6 +5,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JButton;
 import java.awt.Color;
+import javax.swing.JLabel;
+import java.awt.Font;
 
 public class Principal extends JFrame {
 
@@ -33,8 +35,7 @@ public class Principal extends JFrame {
 	private PanelRegistro panelRegistro;
 	private PanelWorkout panelWorkout;
 	private PanelPerfil panelPerfil;
-	
-	private JButton btnUsuario; 
+	private JLabel lblGymElo;
 
 	public Principal() {
 
@@ -77,10 +78,11 @@ public class Principal extends JFrame {
 		panelMenu.setBounds(10, 11, 966, 44);
 		panelContenedor.add(panelMenu);
 		panelMenu.setLayout(null);
-
-	    btnUsuario = new JButton("Perfil");
-		btnUsuario.setBounds(10, 11, 89, 23);
-		panelMenu.add(btnUsuario);
+		
+		lblGymElo = new JLabel("GymElo");
+		lblGymElo.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lblGymElo.setBounds(438, 11, 69, 22);
+		panelMenu.add(lblGymElo);
 	}
 
 	private void mCrearPanelInicioSesion() {
@@ -116,8 +118,10 @@ public class Principal extends JFrame {
 
 		panelInicioSesion.setVisible(false);
 		panelRegistro.setVisible(false);
+		panelPerfil.setVisible(false);
 		panelWorkout.setVisible(false);
-
+		
+		
 		switch (panel) {
         case CARGAR_PANEL_INICIOSESION:
             panelInicioSesion.setVisible(true);
@@ -146,12 +150,12 @@ public class Principal extends JFrame {
 		this.panelContenedor = panelContenedor;
 	}
 	
-	public JButton getBtnUsuario() {
-		return btnUsuario;
+	public JLabel getLblGymElo() {
+		return lblGymElo;
 	}
 
-	public void setBtnUsuario(JButton btnUsuario) {
-		this.btnUsuario = btnUsuario;
+	public void setLblGymElo(JLabel lblGymElo) {
+		this.lblGymElo = lblGymElo;
 	}
 
 	/////////////////////////// PANELES //////////////////////////////////////

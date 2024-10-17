@@ -15,6 +15,8 @@ import vista.Principal;
 public class ControladorContacto implements ActionListener, ListSelectionListener {
 
 	private vista.Principal vistaPrincipal;
+	private Clientes clienteActual;
+	private Clientes cliente;
 
 	/*
 	 * *** CONSTRUCTORES ***
@@ -39,15 +41,24 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 		this.vistaPrincipal.getPanelInicioSesion().getBtnInicioSesion()
 				.setActionCommand(Principal.enumAcciones.INICIAR_SESION.toString());
 
+		this.vistaPrincipal.getPanelInicioSesion().getBtnRegistrar().addActionListener(this);
+		this.vistaPrincipal.getPanelInicioSesion().getBtnRegistrar()
+				.setActionCommand(Principal.enumAcciones.CARGAR_PANEL_REGISTRO.toString());
+
 		// Acciones del panel Registro
 		this.vistaPrincipal.getPanelRegistro().getBtnDarDeAlta().addActionListener(this);
 		this.vistaPrincipal.getPanelRegistro().getBtnDarDeAlta()
 				.setActionCommand(Principal.enumAcciones.REGISTRO.toString());
 
 		// Acciones del men�
-		this.vistaPrincipal.getBtnUsuario().addActionListener(this);
-		this.vistaPrincipal.getBtnUsuario().setActionCommand(Principal.enumAcciones.CARGAR_PANEL_PERFIL.toString());
-		
+		this.vistaPrincipal.getPanelWorkout().getBtnPerfil().addActionListener(this);
+		this.vistaPrincipal.getPanelWorkout().getBtnPerfil()
+				.setActionCommand(Principal.enumAcciones.CARGAR_PANEL_PERFIL.toString());
+
+		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil().addActionListener(this);
+		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil()
+				.setActionCommand(Principal.enumAcciones.MODIFICAR_PERFIL.toString());
+
 	}
 
 	/*** Tratamiento de las acciones ***/
@@ -108,10 +119,18 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 			}
 			break;
 		case CARGAR_PANEL_PERFIL:
+			this.mCargarPerfil();
 			this.vistaPrincipal.mVisualizarPaneles(Principal.enumAcciones.CARGAR_PANEL_PERFIL);
 			break;
 		case MODIFICAR_PERFIL:
-			this.mModificarPerfil();
+			try {
+				this.mModificarPerfil();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			this.vistaPrincipal.mVisualizarPaneles(Principal.enumAcciones.CARGAR_PANEL_WORKOUT);
+			break;
 		case CARGAR_PANEL_WORKOUT:
 			this.vistaPrincipal.mVisualizarPaneles(Principal.enumAcciones.CARGAR_PANEL_WORKOUT);
 			break;
@@ -126,10 +145,12 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 		String email = this.vistaPrincipal.getPanelInicioSesion().getTxtFEmail().getText();
 		String contrasena = this.vistaPrincipal.getPanelInicioSesion().getTxtFContrasena().getText();
 
-		Clientes cliente = new Clientes();
+	    cliente = new Clientes();
 		boolean clienteValido = cliente.mVerificarCliente(email, contrasena);
 
 		if (clienteValido) {
+			// Si la autenticación es exitosa, recuperamos los datos del cliente
+			this.clienteActual = cliente.mObtenerDatosCliente(email);
 			return true;
 		} else {
 			return false;
@@ -152,6 +173,9 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 			try {
 				// Si el email no existe, insertar el nuevo cliente en Firestore
 				cliente.mInsertarCliente();
+				
+				// Actualizar el clienteActual con los datos nuevos
+		        this.clienteActual = cliente;
 				return true;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -160,20 +184,56 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 
 		return false; // El email ya existe o hubo un error
 	}
-	
-	private void mModificarPerfil() {
-		// TODO Auto-generated method stub
+
+	private void mCargarPerfil() {
+		if (clienteActual != null) {
+			vistaPrincipal.getPanelPerfil().getTxtFNombre().setText(clienteActual.getNombre());
+			vistaPrincipal.getPanelPerfil().getTxtFApellido().setText(clienteActual.getApellido());
+			vistaPrincipal.getPanelPerfil().getTxtFEmail().setText(clienteActual.getEmail());
+			vistaPrincipal.getPanelPerfil().getTxtFContrasena().setText(clienteActual.getContrasena());
+			vistaPrincipal.getPanelPerfil().getFechaNaCalendar().setDate(clienteActual.getFechaNa());
+		}
+	}
+
+	private void mModificarPerfil() throws Exception {
 	    String nombre = vistaPrincipal.getPanelPerfil().getTxtFNombre().getText();
 	    String apellido = vistaPrincipal.getPanelPerfil().getTxtFApellido().getText();
 	    String email = vistaPrincipal.getPanelPerfil().getTxtFEmail().getText();
 	    String contrasena = vistaPrincipal.getPanelPerfil().getTxtFContrasena().getText();
 	    Date fechaNa = vistaPrincipal.getPanelPerfil().getFechaNaCalendar().getDate();
 
+	    // Comprobar si el email ha cambiado
+	    if (!email.equals(clienteActual.getEmail())) {
+	        // Verificar si el nuevo email ya está registrado
+	        boolean emailValido = cliente.mVerificarRegistroValido(email);
+	        if (!emailValido) {
+	            JOptionPane.showMessageDialog(vistaPrincipal, "El email ya está en uso.", "Error",
+	                    JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+	    }
+
+	    // Crear un objeto cliente con los datos modificados
 	    Clientes clienteModificado = new Clientes(nombre, apellido, email, contrasena, fechaNa);
 
 	    // Actualizar en Firestore
-	    clienteModificado.mModificarPerfil(nombre, apellido, email, contrasena, fechaNa);
+	    try {
+	        clienteModificado.mModificarPerfil(nombre, apellido, email, contrasena, fechaNa);
+
+	        // Actualizar el clienteActual con los datos nuevos
+	        this.clienteActual = clienteModificado;
+
+	        // Mostrar mensaje de confirmación al usuario
+	        JOptionPane.showMessageDialog(vistaPrincipal, "Perfil modificado correctamente.", "Éxito",
+	                JOptionPane.INFORMATION_MESSAGE);
+	    } catch (Exception e) {
+	        // Mostrar mensaje de error si ocurre algún problema
+	        JOptionPane.showMessageDialog(vistaPrincipal, "Error al modificar el perfil.", "Error",
+	                JOptionPane.ERROR_MESSAGE);
+	        e.printStackTrace();
+	    }
 	}
+
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {

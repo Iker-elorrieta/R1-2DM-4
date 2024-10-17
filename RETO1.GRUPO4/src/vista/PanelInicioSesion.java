@@ -25,33 +25,34 @@ public class PanelInicioSesion extends JPanel {
 		setLayout(null);
 		
 		txtFEmail = new JTextField();
-		txtFEmail.setBounds(154, 131, 221, 20);
+		txtFEmail.setBounds(365, 131, 221, 20);
 		add(txtFEmail);
 		txtFEmail.setColumns(10);
 		
 		txtFContrasena = new JTextField();
-		txtFContrasena.setBounds(154, 174, 221, 20);
+		txtFContrasena.setBounds(365, 174, 221, 20);
 		add(txtFContrasena);
 		txtFContrasena.setColumns(10);
 		
 		btnInicioSesion = new JButton("Iniciar Sesion");
-		btnInicioSesion.setBounds(154, 219, 221, 23);
+		btnInicioSesion.setBounds(365, 224, 221, 23);
 		add(btnInicioSesion);
 		
 		btnRegistrar = new JButton("Registrar");
-		btnRegistrar.setBounds(450, 324, 89, 23);
+		btnRegistrar.setBounds(497, 324, 89, 23);
 		add(btnRegistrar);
 		
 		JLabel lblEmail = new JLabel("Email:");
-		lblEmail.setBounds(50, 134, 97, 14);
+		lblEmail.setBounds(258, 134, 97, 14);
 		add(lblEmail);
 		
 		JLabel lblContrasena = new JLabel("Contraseña:");
-		lblContrasena.setBounds(50, 177, 97, 14);
+		lblContrasena.setBounds(258, 177, 97, 14);
 		add(lblContrasena);
 		
 		JLabel lblRegistro = new JLabel("No tienes cuenta todavia? Registrate en nuestro gimasio.");
-		lblRegistro.setBounds(154, 328, 383, 14);
+		lblRegistro.setForeground(Color.BLUE);
+		lblRegistro.setBounds(154, 328, 333, 14);
 		add(lblRegistro);
 			
 	}

@@ -16,7 +16,7 @@ public class PanelPerfil extends JPanel {
 	private JTextField txtFNombre;
 	private JTextField txtFApellido;
 	private JTextField txtFEmail;
-	private JButton btnModificar;
+	private JButton btnModificarPerfil;
 	private JTextField txtFContrasena;
 	private JLabel lblContrasena;
 	private JLabel lblFechaNa;
@@ -32,51 +32,51 @@ public class PanelPerfil extends JPanel {
 		setLayout(null);
 
 		JLabel lblNombre = new JLabel("Nombre");
-		lblNombre.setBounds(155, 237, 101, 14);
+		lblNombre.setBounds(287, 225, 101, 14);
 		add(lblNombre);
 
 		JLabel lblApellido = new JLabel("Apellido:");
-		lblApellido.setBounds(155, 268, 101, 14);
+		lblApellido.setBounds(287, 268, 101, 14);
 		add(lblApellido);
 
 		txtFNombre = new JTextField();
-		txtFNombre.setBounds(266, 234, 200, 20);
+		txtFNombre.setBounds(413, 222, 200, 20);
 		add(txtFNombre);
 		txtFNombre.setColumns(10);
 
 		txtFApellido = new JTextField();
-		txtFApellido.setBounds(266, 265, 200, 20);
+		txtFApellido.setBounds(413, 265, 200, 20);
 		add(txtFApellido);
 		txtFApellido.setColumns(10);
 
 		JLabel lblEmail = new JLabel("E-mail:");
-		lblEmail.setBounds(155, 168, 97, 14);
+		lblEmail.setBounds(287, 147, 97, 14);
 		add(lblEmail);
 
 		txtFEmail = new JTextField();
-		txtFEmail.setBounds(266, 165, 200, 20);
+		txtFEmail.setBounds(413, 144, 200, 20);
 		add(txtFEmail);
 		txtFEmail.setColumns(10);
 
-		btnModificar = new JButton("Modificar datos");
-		btnModificar.setBounds(149, 361, 199, 23);
-		add(btnModificar);
+		btnModificarPerfil = new JButton("Modificar datos");
+		btnModificarPerfil.setBounds(413, 363, 199, 23);
+		add(btnModificarPerfil);
 
 		txtFContrasena = new JTextField();
-		txtFContrasena.setBounds(266, 203, 200, 20);
+		txtFContrasena.setBounds(413, 181, 200, 20);
 		add(txtFContrasena);
 		txtFContrasena.setColumns(10);
 
 		lblContrasena = new JLabel("Contraseña:");
-		lblContrasena.setBounds(155, 206, 101, 14);
+		lblContrasena.setBounds(287, 184, 101, 14);
 		add(lblContrasena);
 
 		lblFechaNa = new JLabel("Fecha Nacimiento:");
-		lblFechaNa.setBounds(155, 310, 137, 14);
+		lblFechaNa.setBounds(287, 310, 137, 14);
 		add(lblFechaNa);
 		
 		FechaNaCalendar = new JDateChooser();
-		FechaNaCalendar.setBounds(266, 304, 200, 20);
+		FechaNaCalendar.setBounds(413, 310, 200, 20);
 		add(FechaNaCalendar);
 
 		JTextFieldDateEditor editor = (JTextFieldDateEditor) FechaNaCalendar.getDateEditor();
@@ -108,12 +108,12 @@ public class PanelPerfil extends JPanel {
 		this.txtFEmail = txtFEmail;
 	}
 
-	public JButton getBtnModificar() {
-		return btnModificar;
+	public JButton getBtnModificarPerfil() {
+		return btnModificarPerfil;
 	}
 
-	public void setBtnModificar(JButton btnModificar) {
-		this.btnModificar = btnModificar;
+	public void setBtnModificarPerfil(JButton btnModificarPerfil) {
+		this.btnModificarPerfil = btnModificarPerfil;
 	}
 
 	public JTextField getTxtFContrasena() {
