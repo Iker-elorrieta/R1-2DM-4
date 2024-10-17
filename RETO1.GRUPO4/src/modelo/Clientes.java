@@ -1,7 +1,9 @@
 package modelo;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -9,9 +11,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.FirestoreOptions;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 
@@ -92,7 +97,7 @@ public class Clientes {
 
 	// *** M�todos CRUD ***
 	
-	public boolean verificarCliente(String emailIngresado, String contrasenaIngresada) throws Exception {
+	public boolean mVerificarCliente(String emailIngresado, String contrasenaIngresada) throws Exception {
 	    Firestore co = null;
 
 	    try {
@@ -127,7 +132,7 @@ public class Clientes {
 	}
 
 	
-	public boolean verificarRegistroValido(String email) throws Exception {
+	public boolean mVerificarRegistroValido(String email) throws Exception {
 	    Firestore co = null;
 
 	    try {
@@ -186,4 +191,37 @@ public class Clientes {
 
 		return this;
 	}
+
+
+	public void mModificarPerfil(String nombre, String apellido, String email, String contrasena, Date fechaNa) {
+	    Firestore co = null;
+
+	    try {
+	        co = Conexion.conectar();
+	        
+	        // Referencia al documento del cliente basado en su email
+	        CollectionReference clientesRef = co.collection(collectionName).document("Clientes").collection("clientes");
+	        ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
+	        QuerySnapshot querySnapshot = query.get();
+	        List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
+
+	        if (!documentos.isEmpty()) {
+	            DocumentReference docRef = documentos.get(0).getReference();
+	            
+	            Map<String, Object> updates = new HashMap<>();
+	            updates.put(fieldNombre, nombre);
+	            updates.put(fieldApellido, apellido);
+	            updates.put(fieldContraseña, contrasena);
+	            updates.put(fieldFechaNa, fechaNa);
+
+	            docRef.update(updates);
+	        }
+
+	        co.close();
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+
 }

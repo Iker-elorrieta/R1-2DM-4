@@ -17,12 +17,14 @@ public class Principal extends JFrame {
 	public static enum enumAcciones {
 		CARGAR_PANEL_CONSULTA, 
 		CARGAR_PANEL_INICIOSESION, 
-		CARGAR_PANEL_REGISTRO, 
+		CARGAR_PANEL_REGISTRO,
+		CARGAR_PANEL_PERFIL,
 		CARGAR_PANEL_WORKOUT,
 
 
 		INICIAR_SESION, 
-		REGISTRO, 
+		REGISTRO,
+		MODIFICAR_PERFIL,
 
 	}
 
@@ -30,6 +32,7 @@ public class Principal extends JFrame {
 	private PanelInicioSesion panelInicioSesion;
 	private PanelRegistro panelRegistro;
 	private PanelWorkout panelWorkout;
+	private PanelPerfil panelPerfil;
 	
 	private JButton btnUsuario; 
 
@@ -48,10 +51,10 @@ public class Principal extends JFrame {
 		mCrearPanelRegistro();
 
 		// Panel que contiene el listado de insertar.
-		mCrearPanelWorkout();
-
+		mCrearPanelPerfil();
+				
 		// Panel que contiene el listado de insertar.
-
+		mCrearPanelWorkout();
 
 	}
 
@@ -93,6 +96,13 @@ public class Principal extends JFrame {
 		panelRegistro.setVisible(false);
 	}
 	
+	private void mCrearPanelPerfil() {
+		panelPerfil = new PanelPerfil();
+		panelPerfil.setBounds(10, 71, 966, 481);
+		panelContenedor.add(panelPerfil);
+		panelPerfil.setVisible(false);
+	}
+	
 	private void mCrearPanelWorkout() {
 		panelWorkout = new PanelWorkout();
 		panelWorkout.setBounds(10, 71, 966, 481);
@@ -114,6 +124,9 @@ public class Principal extends JFrame {
             break;
         case CARGAR_PANEL_REGISTRO:
             panelRegistro.setVisible(true);
+            break;
+        case CARGAR_PANEL_PERFIL:
+            panelPerfil.setVisible(true);
             break;
         case CARGAR_PANEL_WORKOUT:
             panelWorkout.setVisible(true);
@@ -164,5 +177,13 @@ public class Principal extends JFrame {
 
 	public void setPanelWorkout(PanelWorkout panelWorkout) {
 		this.panelWorkout = panelWorkout;
+	}
+
+	public PanelPerfil getPanelPerfil() {
+		return panelPerfil;
+	}
+
+	public void setPanelPerfil(PanelPerfil panelPerfil) {
+		this.panelPerfil = panelPerfil;
 	}
 }
