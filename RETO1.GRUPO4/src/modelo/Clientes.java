@@ -2,6 +2,7 @@ package modelo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,38 +20,65 @@ import com.google.cloud.firestore.QuerySnapshot;
 import conexion.Conexion;
 
 public class Clientes {
-	
+
 	// *** Atributos ***
+	private String idCliente;
 	private String nombre;
 	private String apellido;
 	private String email;
 	private String contrasena;
 	private Date fechaNa;
-	
-	private static String collectionName = "GymApp";
+	private double nivelUsuario;
+	private boolean esEntrenador;
+	private ArrayList<Workouts> workouts;
+
+	private static String collectionName = "Clientes";
 	private static String fieldNombre = "Nombre";
 	private static String fieldApellido = "Apellido";
 	private static String fieldContraseña = "Contraseña";
 	private static String fieldEmail = "Email";
 	private static String fieldFechaNa = "FechaNa";
-	
-	
+	private static String fieldEsEntrenador = "esEntrenador";
+	private static String fieldNivelUsuario = "nivelUsuario";
+
 	// *** Constructores ***
-	public Clientes(String nombre, String apellido, String email, String contrasena, Date fechaNa) {
+	public Clientes(String nombre, String apellido, String email, String contrasena, Date fechaNa, double nivelUsuario,
+			boolean esEntrenador, ArrayList<Workouts> workouts) {
 		this.nombre = nombre;
 		this.apellido = apellido;
 		this.email = email;
 		this.contrasena = contrasena;
 		this.fechaNa = fechaNa;
-	}
-	
-	
-	public Clientes () {
-		
+		this.nivelUsuario = nivelUsuario;
+		this.esEntrenador = esEntrenador;
+		this.workouts = workouts;
 	}
 
-	
+	public Clientes(String nombre, String apellido, String email, String contrasena, Date fechaNa, double nivelUsuario,
+			boolean esEntrenador) {
+		super();
+		this.nombre = nombre;
+		this.apellido = apellido;
+		this.email = email;
+		this.contrasena = contrasena;
+		this.fechaNa = fechaNa;
+		this.nivelUsuario = nivelUsuario;
+		this.esEntrenador = esEntrenador;
+	}
+
+	public Clientes() {
+		this.workouts = new ArrayList<>(); // Inicializa la lista de series
+	}
+
 	// *** M�todos get-set ***
+	public String getIdCliente() {
+		return idCliente;
+	}
+
+	public void setIdCliente(String idCliente) {
+		this.idCliente = idCliente;
+	}
+
 	public String getNombre() {
 		return nombre;
 	}
@@ -66,7 +94,7 @@ public class Clientes {
 	public void setApellido(String apellido) {
 		this.apellido = apellido;
 	}
-	
+
 	public String getEmail() {
 		return email;
 	}
@@ -91,83 +119,102 @@ public class Clientes {
 		this.fechaNa = fechaNa;
 	}
 
+	public double getNivelUsuario() {
+		return nivelUsuario;
+	}
+
+	public void setNivelUsuario(double nivelUsuario) {
+		this.nivelUsuario = nivelUsuario;
+	}
+
+	public boolean isEsEntrenador() {
+		return esEntrenador;
+	}
+
+	public void setEsEntrenador(boolean esEntrenador) {
+		this.esEntrenador = esEntrenador;
+	}
+
+	public ArrayList<Workouts> getWorkouts() {
+		return workouts;
+	}
+
+	public void setWorkouts(ArrayList<Workouts> workouts) {
+		this.workouts = workouts;
+	}
+
 	// *** M�todos CRUD ***
-	
+
 	public boolean mVerificarCliente(String emailIngresado, String contrasenaIngresada) throws Exception {
-	    Firestore co = null;
+		Firestore co = null;
 
-	    try {
-	        co = Conexion.conectar();
-	        
-	        // Accede a la subcolección "clientes" dentro del documento "Clientes"
-	        CollectionReference clientesRef = co.collection(collectionName).document("Clientes").collection("clientes");
-	        
-	        // Buscar el cliente con el email proporcionado en la subcolección "clientes"
-	        ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, emailIngresado).get();
-	        QuerySnapshot querySnapshot = query.get();
-	        List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
-	        
-	        if (!documentos.isEmpty()) {
-	            // Obtener el primer documento (email debería ser único)
-	            DocumentSnapshot cliente = documentos.get(0);
-	            String contrasenaGuardada = cliente.getString(fieldContraseña);
-	            if (contrasenaGuardada != null && contrasenaGuardada.equals(contrasenaIngresada)) {
-	                return true; // Inicio de sesión exitoso
-	            }
-	        }
-	        
-	        co.close();
+		try {
+			co = Conexion.conectar();
 
-	    } catch (InterruptedException | ExecutionException e) {
-	        e.printStackTrace();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
+			CollectionReference clientesRef = co.collection(collectionName);
 
-	    return false; // Email o contraseña incorrectos
+			// Buscar el cliente con el email proporcionado en la subcolección "clientes"
+			ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, emailIngresado).get();
+			QuerySnapshot querySnapshot = query.get();
+			List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
+
+			if (!documentos.isEmpty()) {
+				// Obtener el primer documento (email debería ser único)
+				DocumentSnapshot cliente = documentos.get(0);
+				String contrasenaGuardada = cliente.getString(fieldContraseña);
+				if (contrasenaGuardada != null && contrasenaGuardada.equals(contrasenaIngresada)) {
+					return true; // Inicio de sesión exitoso
+				}
+			}
+
+			co.close();
+
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false; // Email o contraseña incorrectos
 	}
 
-	
 	public boolean mVerificarRegistroValido(String email) throws Exception {
-	    Firestore co = null;
+		Firestore co = null;
 
-	    try {
-	        co = Conexion.conectar();
+		try {
+			co = Conexion.conectar();
 
-	        // Accede a la subcolección "clientes" dentro del documento "Clientes"
-	        CollectionReference clientesRef = co.collection(collectionName).document("Clientes").collection("clientes");
+			// Accede a la subcolección "clientes" dentro del documento "Clientes"
+			CollectionReference clientesRef = co.collection(collectionName);
 
-	        // Buscar el cliente con el email proporcionado en la subcolección "clientes"
-	        ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
-	        QuerySnapshot querySnapshot = query.get();
-	        List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
+			// Buscar el cliente con el email proporcionado en la subcolección "clientes"
+			ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
+			QuerySnapshot querySnapshot = query.get();
+			List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
 
-	        // Si se encuentra al menos un documento con ese email, el registro no es válido
-	        if (!documentos.isEmpty()) {
-	            return false;  // El email ya existe
-	        }
+			// Si se encuentra al menos un documento con ese email, el registro no es válido
+			if (!documentos.isEmpty()) {
+				return false; // El email ya existe
+			}
 
-	        co.close();
-	        
-	    } catch (InterruptedException | ExecutionException e) {
-	        e.printStackTrace();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
+			co.close();
 
-	    return true;  // El email no existe, registro válido
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return true; // El email no existe, registro válido
 	}
 
-	
 	public Clientes mInsertarCliente() throws Exception {
 		Firestore co = null;
 
 		try {
 			co = Conexion.conectar();
 
-			CollectionReference clientesRef = co.collection(collectionName)
-                    .document("Clientes")
-                    .collection("clientes");
+			CollectionReference clientesRef = co.collection(collectionName);
 
 			Map<String, Object> data = new HashMap<>();
 			data.put(fieldNombre, nombre);
@@ -175,9 +222,11 @@ public class Clientes {
 			data.put(fieldContraseña, contrasena);
 			data.put(fieldEmail, email);
 			data.put(fieldFechaNa, fechaNa);
+			data.put(fieldEsEntrenador, false);
+			data.put(fieldNivelUsuario, 0);
 
 			clientesRef.add(data);
-			
+
 			co.close();
 
 		} catch (FileNotFoundException e) {
@@ -189,57 +238,58 @@ public class Clientes {
 	}
 
 	public Clientes mObtenerDatosCliente(String email) throws Exception {
-	    Firestore co = Conexion.conectar();
-	    CollectionReference clientesRef = co.collection(collectionName).document("Clientes").collection("clientes");
-	    
-	    ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
-	    QuerySnapshot querySnapshot = query.get();
-	    List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
-	    
-	    if (!documentos.isEmpty()) {
-	        DocumentSnapshot clienteDoc = documentos.get(0);
-	        this.nombre = clienteDoc.getString(fieldNombre);
-	        this.apellido = clienteDoc.getString(fieldApellido);
-	        this.email = clienteDoc.getString(fieldEmail);
-	        this.contrasena = clienteDoc.getString(fieldContraseña);
-	        this.fechaNa = clienteDoc.getDate(fieldFechaNa);
-	    }
-	    
-	    co.close();
-	    return this;
+		Firestore co = Conexion.conectar();
+		CollectionReference clientesRef = co.collection(collectionName);
+
+		ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
+		QuerySnapshot querySnapshot = query.get();
+		List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
+
+		if (!documentos.isEmpty()) {
+			DocumentSnapshot clienteDoc = documentos.get(0);
+			this.idCliente = clienteDoc.getId();
+			this.nombre = clienteDoc.getString(fieldNombre);
+			this.apellido = clienteDoc.getString(fieldApellido);
+			this.email = clienteDoc.getString(fieldEmail);
+			this.contrasena = clienteDoc.getString(fieldContraseña);
+			this.fechaNa = clienteDoc.getDate(fieldFechaNa);
+			this.nivelUsuario = clienteDoc.getDouble(fieldNivelUsuario);
+			this.esEntrenador = clienteDoc.getBoolean(fieldEsEntrenador);
+		}
+
+		co.close();
+		return this;
 	}
 
-	
-	public void mModificarPerfil(String nombre, String apellido, String email, String contrasena, Date fechaNa) {
-	    Firestore co = null;
+	public Clientes mModificarPerfil(String idCliente, String nombre, String apellido, String email, String contrasena,
+			Date fechaNa) throws Exception {
+		Firestore co = null;
 
-	    try {
-	        co = Conexion.conectar();
-	        
-	        // Referencia al documento del cliente basado en su email
-	        CollectionReference clientesRef = co.collection(collectionName).document("Clientes").collection("clientes");
-	        ApiFuture<QuerySnapshot> query = clientesRef.whereEqualTo(fieldEmail, email).get();
-	        QuerySnapshot querySnapshot = query.get();
-	        List<QueryDocumentSnapshot> documentos = querySnapshot.getDocuments();
+		try {
+			co = Conexion.conectar();
 
-	        if (!documentos.isEmpty()) {
-	            DocumentReference docRef = documentos.get(0).getReference();
-	            
-	            Map<String, Object> updates = new HashMap<>();
-	            updates.put(fieldNombre, nombre);
-	            updates.put(fieldApellido, apellido);
-	            updates.put(fieldContraseña, contrasena);
-	            updates.put(fieldEmail, email);      
-	            updates.put(fieldFechaNa, fechaNa);
+			// Obtén la referencia al documento específico utilizando el idCliente
+			DocumentReference docRef = co.collection(collectionName).document(idCliente);
+			ApiFuture<DocumentSnapshot> future = docRef.get();
+			DocumentSnapshot document = future.get();
 
-	            docRef.update(updates);
-	        }
+			if (document.exists()) {
+				Map<String, Object> updates = new HashMap<>();
+				updates.put(fieldNombre, nombre);
+				updates.put(fieldApellido, apellido);
+				updates.put(fieldContraseña, contrasena);
+				updates.put(fieldEmail, email);
+				updates.put(fieldFechaNa, fechaNa);
 
-	        co.close();
+				// Actualizar el documento
+				docRef.update(updates);
+			}
+			co.close();
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+
+		return this;
 	}
-
 }
