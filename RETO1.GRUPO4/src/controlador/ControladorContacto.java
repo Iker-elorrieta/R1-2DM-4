@@ -1,16 +1,25 @@
 package controlador;
 
+import java.awt.Desktop;
 import java.awt.HeadlessException;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -26,7 +35,7 @@ import modelo.Series;
 import modelo.Workouts;
 import vista.Principal;
 
-public class ControladorContacto implements ActionListener, ListSelectionListener {
+public class ControladorContacto implements ActionListener {
 
 	private vista.Principal vistaPrincipal;
 	private Clientes clienteActual;
@@ -73,6 +82,11 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil().addActionListener(this);
 		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil()
 				.setActionCommand(Principal.enumAcciones.MODIFICAR_PERFIL.toString());
+		
+		/*
+		 * this.vistaPrincipal.getPanelEliminar().getTablaContactos().getSelectionModel().addListSelectionListener(this);
+		this.vistaPrincipal.getPanelEliminar().getTablaContactos().getSelectionModel()
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);*/
 
 	}
 
@@ -257,96 +271,104 @@ public class ControladorContacto implements ActionListener, ListSelectionListene
 	}
 
 	private void mCargarPanelWorkout() {
-		try {
-			Clientes cl = this.clienteActual;
+	    try {
+	        Clientes cl = this.clienteActual;
 
-			if (cl != null) {
-				DefaultComboBoxModel<Integer> nivelClienteModel = new DefaultComboBoxModel<>();
-				int nivelUsuario = (int) cl.getNivelUsuario();
+	        ////////////// COMBOBOX NIVEL //////////////
+	        DefaultComboBoxModel<Integer> nivelClienteModel = new DefaultComboBoxModel<>();
+	        int nivelUsuario = (int) cl.getNivelUsuario();
+	        for (int i = 0; i <= nivelUsuario; i++) {
+	            nivelClienteModel.addElement(i);
+	        }
+	        vistaPrincipal.getPanelWorkout().getCmbNivel().setModel(nivelClienteModel);
 
-				// Rellenar el ComboBox con los niveles desde 0 hasta el nivel del usuario
-				for (int i = 0; i <= nivelUsuario; i++) {
-					nivelClienteModel.addElement(i);
-				}
+	        ////////////// Cargar workouts //////////////
+	        ArrayList<Workouts> listaWorkouts = workout.mCargarWorkouts();
+	        HashMap<String, Workouts> workoutMap = new HashMap<>();
+	        for (Workouts workout : listaWorkouts) {
+	            String workoutId = workout.getIdWorkouts();
+	            workoutMap.put(workoutId, workout);
+	        }
 
-				// Establecer el modelo en el ComboBox
-				vistaPrincipal.getPanelWorkout().getCmbNivel().setModel(nivelClienteModel);
+	        ////////////// Cargar JList //////////////
+	        vistaPrincipal.getPanelWorkout().getCmbNivel().addActionListener(e -> {
+	            int nivelSeleccionado = (int) vistaPrincipal.getPanelWorkout().getCmbNivel().getSelectedItem();
+	            DefaultListModel<String> workoutModel = new DefaultListModel<>();
+	            for (Workouts workout : listaWorkouts) {
+	                if (workout.getNivelWorkout() <= nivelSeleccionado) {
+	                    workoutModel.addElement(workout.getIdWorkouts());
+	                }
+	            }
+	            vistaPrincipal.getPanelWorkout().getListWorkout().setModel(workoutModel);
+	        });
 
-				// Cargamos todos los workouts
-				ArrayList<Workouts> listaWorkouts = workout.mCargarWorkouts();
-				if (listaWorkouts != null) {
-					// Map para almacenar los workouts con sus IDs
-					HashMap<String, Workouts> workoutMap = new HashMap<>();
-					// Cargar workoutMap con todos los workouts disponibles
-					for (Workouts workout : listaWorkouts) {
-						String workoutId = workout.getIdWorkouts();
-						workoutMap.put(workoutId, workout);
-					}
+	        ////////////// Cargar JLabel detalles workout //////////////
+	        vistaPrincipal.getPanelWorkout().getListWorkout().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+	            public void valueChanged(ListSelectionEvent e) {
+	                String selectedWorkoutId = vistaPrincipal.getPanelWorkout().getListWorkout().getSelectedValue();
 
-					// Listener para actualizar el JList cuando se selecciona un nivel en el
-					// ComboBox
-					vistaPrincipal.getPanelWorkout().getCmbNivel().addActionListener(e -> {
-						int nivelSeleccionado = (int) vistaPrincipal.getPanelWorkout().getCmbNivel().getSelectedItem();
+	                if (selectedWorkoutId != null) {
+	                    Workouts selectedWorkout = workoutMap.get(selectedWorkoutId);
+	                    if (selectedWorkout != null) {
+	                        // Crear detalles del workout en una sola línea
+	                        String workoutDetails =
+	                                "Nombre del Workout: " + selectedWorkout.getNombreWorkout() + " | " +
+	                                "Nivel del Workout: " + selectedWorkout.getNivelWorkout() + " | " +
+	                                "Ejercicios: ";
 
-						// Limpiar el JList de detalles cuando cambie el nivel
-						DefaultListModel<String> emptyDetailsModel = new DefaultListModel<>();
-						vistaPrincipal.getPanelWorkout().getListDetallesWorkout().setModel(emptyDetailsModel);
+	                        // lista de ejercicios de cada workout
+	                        ArrayList<Ejercicios> listaEjercicios = selectedWorkout.getEjercicios();
+	                        for (int i = 0; i < listaEjercicios.size(); i++) {
+	                            Ejercicios ejercicio = listaEjercicios.get(i);
+	                            workoutDetails += ejercicio.getNombreEjer();
+	                            if (i < listaEjercicios.size() - 1) {
+	                                workoutDetails += ", ";
+	                            }
+	                        }
+	                        workoutDetails += " | ";
 
-						// Filtramos los workouts basados en el nivel seleccionado
-						DefaultListModel<String> workoutModel = new DefaultListModel<>();
-						for (Workouts workout : listaWorkouts) {
-							if (workout.getNivelWorkout() <= nivelSeleccionado) {
-								String workoutId = workout.getIdWorkouts();
-								workoutModel.addElement(workoutId);
-							}
-						}
+	                        // Setear los detalles en el JLabel
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setText(workoutDetails);
 
-						// Establecer el modelo filtrado en el JList de workouts
-						vistaPrincipal.getPanelWorkout().getListWorkout().setModel(workoutModel);
-					});
+	                        // Redimensionar la imagen
+	                        ImageIcon originalIcon = new ImageIcon("img/video.png");
+	                        Image image = originalIcon.getImage(); // Obtener la imagen original
+	                        Image scaledImage = image.getScaledInstance(30, 30, Image.SCALE_SMOOTH); // Redimensionar a 30x30
+	                        ImageIcon scaledIcon = new ImageIcon(scaledImage); // Crear un nuevo ImageIcon con la imagen redimensionada
 
-					// Listener para manejar la selección de un workout y mostrar los detalles
-					vistaPrincipal.getPanelWorkout().getListWorkout().addListSelectionListener(e -> {
-						if (!e.getValueIsAdjusting()) {
-							String selectedWorkoutId = vistaPrincipal.getPanelWorkout().getListWorkout()
-									.getSelectedValue();
+	                        // Añadir la imagen al final del texto
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setIcon(scaledIcon);
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setHorizontalTextPosition(SwingConstants.LEFT); // El texto a la izquierda
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setVerticalTextPosition(SwingConstants.CENTER); // Imagen centrada verticalmente
 
-							if (selectedWorkoutId != null) {
-								Workouts selectedWorkout = workoutMap.get(selectedWorkoutId);
+	                        // Remover el MouseListener anterior (para que no se abran muchas pantallas de vidoe)
+	                        for (MouseListener listener : vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().getMouseListeners()) {
+	                            vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().removeMouseListener(listener);
+	                        }
 
-								if (selectedWorkout != null) {
-									// Creamos un nuevo modelo para mostrar los ejercicios
-									DefaultListModel<String> detailsModel = new DefaultListModel<>();
+	                        // Añadir acción para abrir el video al hacer clic en la imagen
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().addMouseListener(new MouseAdapter() {
+	                            @Override
+	                            public void mouseClicked(MouseEvent e) {
+	                                try {
+	                                    Desktop.getDesktop().browse(new URI(selectedWorkout.getVideo())); // Abre el enlace en el navegador
+	                                } catch (Exception ex) {
+	                                    ex.printStackTrace();
+	                                }
+	                            }
+	                        });
+	                    } else {
+	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setText("No se encontraron detalles para el workout seleccionado.");
+	                    }
+	                }
+	            }
+	        });
 
-									for (Ejercicios ejercicio : selectedWorkout.getEjercicios()) {
-										String ejercicioInfo = "Ejercicio: " + ejercicio.getIdEjercicio() + ", nombre: "
-												+ ejercicio.getNombreEjer() + ", descanso: "
-												+ ejercicio.getDescansoEjer() + ", descripcion: "
-												+ ejercicio.getDescripcionEjer() + ", cronometro: "
-												+ ejercicio.getCronometro();
-										detailsModel.addElement(ejercicioInfo);
-									}
-
-									// Seteamos el modelo con los detalles de los ejercicios
-									vistaPrincipal.getPanelWorkout().getListDetallesWorkout().setModel(detailsModel);
-								}
-							}
-						}
-					});
-				} else {
-					System.out.println("Error al cargar workouts.");
-				}
-			} else {
-				System.out.println("Error al obtener datos del cliente.");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 
-	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		// TODO Auto-generated method stub
 
-	}
+
 }

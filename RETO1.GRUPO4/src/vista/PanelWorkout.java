@@ -15,7 +15,7 @@ public class PanelWorkout extends JPanel {
     private JButton btnPerfil;
     private JComboBox<Integer> cmbNivel;  
     private JList<String> listWorkout;   
-    private JList<String> listDetallesWorkout; 
+    private JLabel lblDetallesWorkout;
 
     /**
      * Create the panel.
@@ -25,46 +25,41 @@ public class PanelWorkout extends JPanel {
         setBounds(10, 71, 966, 481);
         setLayout(null);
 
-        // Botón de historial de workouts
         btnHistorialWorkouts = new JButton("Historial Workouts");
         btnHistorialWorkouts.setBounds(741, 430, 197, 23);
         add(btnHistorialWorkouts);
 
-        // Botón de perfil
         btnPerfil = new JButton("Perfil");
         btnPerfil.setBounds(849, 28, 89, 23);
         add(btnPerfil);
 
-        // JList para mostrar los workouts
         listWorkout = new JList<>();
         listWorkout.setBounds(91, 117, 187, 291);
         add(listWorkout);
 
-        // JList para mostrar los detalles del workout seleccionado
-        listDetallesWorkout = new JList<>();
-        listDetallesWorkout.setBounds(288, 117, 650, 291);
-        add(listDetallesWorkout);
-
-        // Etiqueta de "Workout"
         JLabel lblWorkout = new JLabel("Workout");
         lblWorkout.setFont(new Font("Tahoma", Font.BOLD, 16));
         lblWorkout.setBounds(91, 92, 105, 14);
         add(lblWorkout);
 
-        // Etiqueta de "Detalles del workout"
-        JLabel lblDetallesWorkout = new JLabel("Detalles del workout");
-        lblDetallesWorkout.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lblDetallesWorkout.setBounds(288, 92, 187, 14);
+        JLabel lblInfoDetallesWorkout = new JLabel("Detalles del workout");
+        lblInfoDetallesWorkout.setFont(new Font("Tahoma", Font.BOLD, 16));
+        lblInfoDetallesWorkout.setBounds(288, 92, 187, 14);
+        add(lblInfoDetallesWorkout);
+        
+        lblDetallesWorkout = new JLabel("");
+        lblDetallesWorkout.setBackground(new Color(255, 255, 255));
+        lblDetallesWorkout.setFont(new Font("Tahoma", Font.PLAIN, 11));
+        lblDetallesWorkout.setBounds(288, 116, 640, 39);
         add(lblDetallesWorkout);
-
-        // ComboBox para seleccionar el nivel
+        
         cmbNivel = new JComboBox<>();
         cmbNivel.setBounds(91, 48, 143, 22);
         add(cmbNivel);
+ 
     }
 
     // Getters y Setters para los componentes
-
     public JButton getBtnHistorialWorkouts() {
         return btnHistorialWorkouts;
     }
@@ -97,11 +92,11 @@ public class PanelWorkout extends JPanel {
         this.listWorkout = listWorkout;
     }
 
-    public JList<String> getListDetallesWorkout() {
-        return listDetallesWorkout;
-    }
+	public JLabel getLblDetallesWorkout() {
+		return lblDetallesWorkout;
+	}
 
-    public void setListDetallesWorkout(JList<String> listDetallesWorkout) {
-        this.listDetallesWorkout = listDetallesWorkout;
-    }
+	public void setLblDetallesWorkout(JLabel lblDetallesWorkout) {
+		this.lblDetallesWorkout = lblDetallesWorkout;
+	}
 }
