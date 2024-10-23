@@ -3,7 +3,6 @@ package vista;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JButton;
 import java.awt.Color;
 import javax.swing.JLabel;
 import java.awt.Font;
@@ -17,16 +16,10 @@ public class Principal extends JFrame {
 
 	// Acciones
 	public static enum enumAcciones {
-		CARGAR_PANEL_CONSULTA, 
-		CARGAR_PANEL_INICIOSESION, 
-		CARGAR_PANEL_REGISTRO,
-		CARGAR_PANEL_PERFIL,
-		CARGAR_PANEL_WORKOUT,
+		CARGAR_PANEL_CONSULTA, CARGAR_PANEL_INICIOSESION, CARGAR_PANEL_REGISTRO, CARGAR_PANEL_PERFIL,
+		CARGAR_PANEL_WORKOUT, CARGAR_PANEL_HISTORICO,
 
-
-		INICIAR_SESION, 
-		REGISTRO,
-		MODIFICAR_PERFIL,
+		INICIAR_SESION, REGISTRO, MODIFICAR_PERFIL,
 
 	}
 
@@ -35,6 +28,8 @@ public class Principal extends JFrame {
 	private PanelRegistro panelRegistro;
 	private PanelWorkout panelWorkout;
 	private PanelPerfil panelPerfil;
+	private PanelHistorico panelHistorico;
+	
 	private JLabel lblGymElo;
 
 	public Principal() {
@@ -53,9 +48,12 @@ public class Principal extends JFrame {
 
 		// Panel que contiene el listado de insertar.
 		mCrearPanelPerfil();
-				
+
 		// Panel que contiene el listado de insertar.
 		mCrearPanelWorkout();
+
+		// Panel que contiene el listado de insertar.
+		mCrearPanelHistorico();
 
 	}
 
@@ -78,7 +76,7 @@ public class Principal extends JFrame {
 		panelMenu.setBounds(10, 11, 966, 44);
 		panelContenedor.add(panelMenu);
 		panelMenu.setLayout(null);
-		
+
 		lblGymElo = new JLabel("GymElo");
 		lblGymElo.setFont(new Font("Tahoma", Font.BOLD, 16));
 		lblGymElo.setBounds(438, 11, 69, 22);
@@ -97,49 +95,58 @@ public class Principal extends JFrame {
 		panelContenedor.add(panelRegistro);
 		panelRegistro.setVisible(false);
 	}
-	
+
 	private void mCrearPanelPerfil() {
 		panelPerfil = new PanelPerfil();
 		panelPerfil.setBounds(10, 71, 966, 481);
 		panelContenedor.add(panelPerfil);
 		panelPerfil.setVisible(false);
 	}
-	
+
 	private void mCrearPanelWorkout() {
 		panelWorkout = new PanelWorkout();
 		panelWorkout.setBounds(10, 71, 966, 481);
 		panelContenedor.add(panelWorkout);
 		panelWorkout.setVisible(false);
 	}
+	
+	private void mCrearPanelHistorico() {
+		panelHistorico = new PanelHistorico();
+		panelHistorico.setBounds(10, 71, 966, 481);
+		panelContenedor.add(panelHistorico);
+		panelHistorico.setVisible(false);
+	}
 
 	// *** FIN creaci�n de paneles ***
 
 	public void mVisualizarPaneles(enumAcciones panel) {
-
 		panelInicioSesion.setVisible(false);
 		panelRegistro.setVisible(false);
 		panelPerfil.setVisible(false);
 		panelWorkout.setVisible(false);
-		
-		
+		panelHistorico.setVisible(false);
+
 		switch (panel) {
-        case CARGAR_PANEL_INICIOSESION:
-            panelInicioSesion.setVisible(true);
-            break;
-        case CARGAR_PANEL_REGISTRO:
-            panelRegistro.setVisible(true);
-            break;
-        case CARGAR_PANEL_PERFIL:
-            panelPerfil.setVisible(true);
-            break;
-        case CARGAR_PANEL_WORKOUT:
-            panelWorkout.setVisible(true);
-            break;
-        // Agregar otros casos si es necesario
-        default:
-            break;
-    }
-}
+		case CARGAR_PANEL_INICIOSESION:
+			panelInicioSesion.setVisible(true);
+			break;
+		case CARGAR_PANEL_REGISTRO:
+			panelRegistro.setVisible(true);
+			break;
+		case CARGAR_PANEL_PERFIL:
+			panelPerfil.setVisible(true);
+			break;
+		case CARGAR_PANEL_WORKOUT:
+			panelWorkout.setVisible(true);
+			break;
+		case CARGAR_PANEL_HISTORICO:
+			panelHistorico.setVisible(true);
+			break;
+		// Agregar otros casos si es necesario
+		default:
+			break;
+		}
+	}
 
 	// *** M�todos get-set ***
 	public JPanel getPanelContenedor() {
@@ -149,7 +156,7 @@ public class Principal extends JFrame {
 	public void setPanelContenedor(JPanel panelContenedor) {
 		this.panelContenedor = panelContenedor;
 	}
-	
+
 	public JLabel getLblGymElo() {
 		return lblGymElo;
 	}
@@ -189,5 +196,13 @@ public class Principal extends JFrame {
 
 	public void setPanelPerfil(PanelPerfil panelPerfil) {
 		this.panelPerfil = panelPerfil;
+	}
+
+	public PanelHistorico getPanelHistorico() {
+		return panelHistorico;
+	}
+
+	public void setPanelHistorico(PanelHistorico panelHistorico) {
+		this.panelHistorico = panelHistorico;
 	}
 }

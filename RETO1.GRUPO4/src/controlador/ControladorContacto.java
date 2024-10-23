@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
@@ -31,6 +33,7 @@ import com.google.cloud.firestore.Firestore;
 import conexion.Conexion;
 import modelo.Clientes;
 import modelo.Ejercicios;
+import modelo.Historico;
 import modelo.Series;
 import modelo.Workouts;
 import vista.Principal;
@@ -82,11 +85,11 @@ public class ControladorContacto implements ActionListener {
 		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil().addActionListener(this);
 		this.vistaPrincipal.getPanelPerfil().getBtnModificarPerfil()
 				.setActionCommand(Principal.enumAcciones.MODIFICAR_PERFIL.toString());
-		
-		/*
-		 * this.vistaPrincipal.getPanelEliminar().getTablaContactos().getSelectionModel().addListSelectionListener(this);
-		this.vistaPrincipal.getPanelEliminar().getTablaContactos().getSelectionModel()
-				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);*/
+
+		// Acciones del men�
+		this.vistaPrincipal.getPanelWorkout().getBtnHistorialWorkouts().addActionListener(this);
+		this.vistaPrincipal.getPanelWorkout().getBtnHistorialWorkouts()
+				.setActionCommand(Principal.enumAcciones.CARGAR_PANEL_HISTORICO.toString());
 
 	}
 
@@ -160,6 +163,9 @@ public class ControladorContacto implements ActionListener {
 		case CARGAR_PANEL_WORKOUT:
 			this.vistaPrincipal.mVisualizarPaneles(Principal.enumAcciones.CARGAR_PANEL_WORKOUT);
 			break;
+		case CARGAR_PANEL_HISTORICO:
+			this.mCargarHistorico(accion);
+			this.vistaPrincipal.mVisualizarPaneles(Principal.enumAcciones.CARGAR_PANEL_HISTORICO);
 		default:
 			break;
 
@@ -216,7 +222,8 @@ public class ControladorContacto implements ActionListener {
 			}
 		}
 
-		JOptionPane.showMessageDialog(vistaPrincipal, "No se ha podido registrar al usuario, email ya existente.", "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(vistaPrincipal, "No se ha podido registrar al usuario, email ya existente.",
+				"Error", JOptionPane.ERROR_MESSAGE);
 		return false; // El email ya existe o hubo un error
 	}
 
@@ -271,104 +278,165 @@ public class ControladorContacto implements ActionListener {
 	}
 
 	private void mCargarPanelWorkout() {
-	    try {
-	        Clientes cl = this.clienteActual;
+		try {
+			Clientes cl = this.clienteActual;
 
-	        ////////////// COMBOBOX NIVEL //////////////
-	        DefaultComboBoxModel<Integer> nivelClienteModel = new DefaultComboBoxModel<>();
-	        int nivelUsuario = (int) cl.getNivelUsuario();
-	        for (int i = 0; i <= nivelUsuario; i++) {
-	            nivelClienteModel.addElement(i);
+			////////////// COMBOBOX NIVEL //////////////
+			DefaultComboBoxModel<Integer> nivelClienteModel = new DefaultComboBoxModel<>();
+			int nivelUsuario = (int) cl.getNivelUsuario();
+			for (int i = 0; i <= nivelUsuario; i++) {
+				nivelClienteModel.addElement(i);
+			}
+			vistaPrincipal.getPanelWorkout().getCmbNivel().setModel(nivelClienteModel);
+
+			////////////// Cargar workouts //////////////
+			ArrayList<Workouts> listaWorkouts = workout.mCargarWorkouts();
+			HashMap<String, Workouts> workoutMap = new HashMap<>();
+			for (Workouts workout : listaWorkouts) {
+				String workoutId = workout.getIdWorkouts();
+				workoutMap.put(workoutId, workout);
+			}
+
+			////////////// Cargar JList //////////////
+			vistaPrincipal.getPanelWorkout().getCmbNivel().addActionListener(e -> {
+				int nivelSeleccionado = (int) vistaPrincipal.getPanelWorkout().getCmbNivel().getSelectedItem();
+				DefaultListModel<String> workoutModel = new DefaultListModel<>();
+				for (Workouts workout : listaWorkouts) {
+					if (workout.getNivelWorkout() <= nivelSeleccionado) {
+						workoutModel.addElement(workout.getIdWorkouts());
+					}
+				}
+				vistaPrincipal.getPanelWorkout().getListWorkout().setModel(workoutModel);
+			});
+
+			////////////// Cargar JLabel detalles workout //////////////
+			vistaPrincipal.getPanelWorkout().getListWorkout().getSelectionModel()
+					.addListSelectionListener(new ListSelectionListener() {
+						public void valueChanged(ListSelectionEvent e) {
+							String selectedWorkoutId = vistaPrincipal.getPanelWorkout().getListWorkout()
+									.getSelectedValue();
+
+							if (selectedWorkoutId != null) {
+								Workouts selectedWorkout = workoutMap.get(selectedWorkoutId);
+								if (selectedWorkout != null) {
+									// Crear detalles del workout en una sola línea
+									String workoutDetails = "Nombre del Workout: " + selectedWorkout.getNombreWorkout()
+											+ " | " + "Nivel del Workout: " + selectedWorkout.getNivelWorkout() + " | "
+											+ "Ejercicios: ";
+
+									// lista de ejercicios de cada workout
+									ArrayList<Ejercicios> listaEjercicios = selectedWorkout.getEjercicios();
+									for (int i = 0; i < listaEjercicios.size(); i++) {
+										Ejercicios ejercicio = listaEjercicios.get(i);
+										workoutDetails += ejercicio.getNombreEjer();
+										if (i < listaEjercicios.size() - 1) {
+											workoutDetails += ", ";
+										}
+									}
+									workoutDetails += " | ";
+
+									// Setear los detalles en el JLabel
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setText(workoutDetails);
+
+									// Redimensionar la imagen
+									ImageIcon originalIcon = new ImageIcon("img/video.png");
+									Image image = originalIcon.getImage(); // Obtener la imagen original
+									Image scaledImage = image.getScaledInstance(30, 30, Image.SCALE_SMOOTH); // Redimensionar
+																												// a
+																												// 30x30
+									ImageIcon scaledIcon = new ImageIcon(scaledImage); // Crear un nuevo ImageIcon con
+																						// la imagen redimensionada
+
+									// Añadir la imagen al final del texto
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setIcon(scaledIcon);
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
+											.setHorizontalTextPosition(SwingConstants.LEFT); // El texto a la izquierda
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
+											.setVerticalTextPosition(SwingConstants.CENTER); // Imagen centrada verticalmente
+
+									// Remover el MouseListener anterior (para que no se abran muchas pantallas de vidoe)
+									for (MouseListener listener : vistaPrincipal.getPanelWorkout()
+											.getLblDetallesWorkout().getMouseListeners()) {
+										vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
+												.removeMouseListener(listener);
+									}
+
+									// Añadir acción para abrir el video al hacer clic en la imagen
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
+											.addMouseListener(new MouseAdapter() {
+												@Override
+												public void mouseClicked(MouseEvent e) {
+													try {
+														Desktop.getDesktop()
+																.browse(new URI(selectedWorkout.getVideo())); // Abre el enlace en el navegador
+													} catch (Exception ex) {
+														ex.printStackTrace();
+													}
+												}
+											});
+								} else {
+									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
+											.setText("No se encontraron detalles para el workout seleccionado.");
+								}
+							}
+						}
+					});
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void mCargarHistorico(Principal.enumAcciones accion) {
+		
+		Historico historico = new Historico();
+		
+	    mLimpiarTabla(accion);
+
+	    // Obtener los datos del histórico para el cliente dado
+	    ArrayList<Historico> listaHistorico = historico.mObtenerHistorico(clienteActual.getIdCliente());
+	    System.out.println("Número de históricos obtenidos: " + listaHistorico.size());
+
+	    for (int i = 0; i < listaHistorico.size(); i++) {
+	        System.out.println("Workout: " + listaHistorico.get(i).getNombreWorkout() + ", Nivel: " + listaHistorico.get(i).getNivelWorkout());
+	    }
+	  
+
+	    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+	    String matrizInfo[][] = new String[listaHistorico.size()][6];
+
+	    for (int i = 0; i < listaHistorico.size(); i++) {
+	        matrizInfo[i][0] = listaHistorico.get(i).getNombreWorkout();
+	        matrizInfo[i][1] = String.valueOf(listaHistorico.get(i).getNivelWorkout());
+	        matrizInfo[i][2] = String.valueOf(listaHistorico.get(i).getTiempoTotal());
+	        matrizInfo[i][3] = String.valueOf(listaHistorico.get(i).getTiempoPrevisto());
+	        Date fecha = listaHistorico.get(i).getFecha(); // Suponiendo que getFecha() devuelve un Date
+	        matrizInfo[i][4] = (fecha != null) ? sdf.format(fecha) : "Sin fecha";  // Formatear la fecha
+	        matrizInfo[i][5] = String.valueOf(listaHistorico.get(i).getEjerciciosRealizados());
+
+	        switch (accion) {
+	        case CARGAR_PANEL_HISTORICO:
+	            this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().addRow(matrizInfo[i]);
+	            break;
+	        default:
+	            break;
 	        }
-	        vistaPrincipal.getPanelWorkout().getCmbNivel().setModel(nivelClienteModel);
-
-	        ////////////// Cargar workouts //////////////
-	        ArrayList<Workouts> listaWorkouts = workout.mCargarWorkouts();
-	        HashMap<String, Workouts> workoutMap = new HashMap<>();
-	        for (Workouts workout : listaWorkouts) {
-	            String workoutId = workout.getIdWorkouts();
-	            workoutMap.put(workoutId, workout);
-	        }
-
-	        ////////////// Cargar JList //////////////
-	        vistaPrincipal.getPanelWorkout().getCmbNivel().addActionListener(e -> {
-	            int nivelSeleccionado = (int) vistaPrincipal.getPanelWorkout().getCmbNivel().getSelectedItem();
-	            DefaultListModel<String> workoutModel = new DefaultListModel<>();
-	            for (Workouts workout : listaWorkouts) {
-	                if (workout.getNivelWorkout() <= nivelSeleccionado) {
-	                    workoutModel.addElement(workout.getIdWorkouts());
-	                }
-	            }
-	            vistaPrincipal.getPanelWorkout().getListWorkout().setModel(workoutModel);
-	        });
-
-	        ////////////// Cargar JLabel detalles workout //////////////
-	        vistaPrincipal.getPanelWorkout().getListWorkout().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-	            public void valueChanged(ListSelectionEvent e) {
-	                String selectedWorkoutId = vistaPrincipal.getPanelWorkout().getListWorkout().getSelectedValue();
-
-	                if (selectedWorkoutId != null) {
-	                    Workouts selectedWorkout = workoutMap.get(selectedWorkoutId);
-	                    if (selectedWorkout != null) {
-	                        // Crear detalles del workout en una sola línea
-	                        String workoutDetails =
-	                                "Nombre del Workout: " + selectedWorkout.getNombreWorkout() + " | " +
-	                                "Nivel del Workout: " + selectedWorkout.getNivelWorkout() + " | " +
-	                                "Ejercicios: ";
-
-	                        // lista de ejercicios de cada workout
-	                        ArrayList<Ejercicios> listaEjercicios = selectedWorkout.getEjercicios();
-	                        for (int i = 0; i < listaEjercicios.size(); i++) {
-	                            Ejercicios ejercicio = listaEjercicios.get(i);
-	                            workoutDetails += ejercicio.getNombreEjer();
-	                            if (i < listaEjercicios.size() - 1) {
-	                                workoutDetails += ", ";
-	                            }
-	                        }
-	                        workoutDetails += " | ";
-
-	                        // Setear los detalles en el JLabel
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setText(workoutDetails);
-
-	                        // Redimensionar la imagen
-	                        ImageIcon originalIcon = new ImageIcon("img/video.png");
-	                        Image image = originalIcon.getImage(); // Obtener la imagen original
-	                        Image scaledImage = image.getScaledInstance(30, 30, Image.SCALE_SMOOTH); // Redimensionar a 30x30
-	                        ImageIcon scaledIcon = new ImageIcon(scaledImage); // Crear un nuevo ImageIcon con la imagen redimensionada
-
-	                        // Añadir la imagen al final del texto
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setIcon(scaledIcon);
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setHorizontalTextPosition(SwingConstants.LEFT); // El texto a la izquierda
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setVerticalTextPosition(SwingConstants.CENTER); // Imagen centrada verticalmente
-
-	                        // Remover el MouseListener anterior (para que no se abran muchas pantallas de vidoe)
-	                        for (MouseListener listener : vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().getMouseListeners()) {
-	                            vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().removeMouseListener(listener);
-	                        }
-
-	                        // Añadir acción para abrir el video al hacer clic en la imagen
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().addMouseListener(new MouseAdapter() {
-	                            @Override
-	                            public void mouseClicked(MouseEvent e) {
-	                                try {
-	                                    Desktop.getDesktop().browse(new URI(selectedWorkout.getVideo())); // Abre el enlace en el navegador
-	                                } catch (Exception ex) {
-	                                    ex.printStackTrace();
-	                                }
-	                            }
-	                        });
-	                    } else {
-	                        vistaPrincipal.getPanelWorkout().getLblDetallesWorkout().setText("No se encontraron detalles para el workout seleccionado.");
-	                    }
-	                }
-	            }
-	        });
-
-	    } catch (Exception e) {
-	        e.printStackTrace();
 	    }
 	}
 
+	
+	private void mLimpiarTabla(Principal.enumAcciones accion) {
+		
+		switch (accion) {
+		case CARGAR_PANEL_HISTORICO:
+			if (this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().getRowCount() > 0) {
+				this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().setRowCount(0);
+			}
+			break;
+		default:
+			break;
+		}
 
+	}
 
 }
