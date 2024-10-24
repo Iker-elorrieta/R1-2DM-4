@@ -1,7 +1,13 @@
 package modelo;
 
-public class Series {
+import java.io.Serializable;
+
+public class Series implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// *** Atributos ***
 	private String idSerie;
 	private double cuentaRegresiva;

@@ -1,9 +1,14 @@
 package modelo;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Ejercicios {
+public class Ejercicios implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// *** Atributos ***
 	private String idEjercicio;
 	private double cronometro;

@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,18 +18,10 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
-
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-
-import conexion.Conexion;
+import modelo.Backups;
 import modelo.Clientes;
 import modelo.Ejercicios;
 import modelo.Historico;
@@ -44,6 +35,8 @@ public class ControladorContacto implements ActionListener {
 	private Clientes clienteActual;
 	private Clientes cliente;
 	private Workouts workout;
+	private Backups backups;
+
 
 	/*
 	 * *** CONSTRUCTORES ***
@@ -90,6 +83,12 @@ public class ControladorContacto implements ActionListener {
 		this.vistaPrincipal.getPanelWorkout().getBtnHistorialWorkouts().addActionListener(this);
 		this.vistaPrincipal.getPanelWorkout().getBtnHistorialWorkouts()
 				.setActionCommand(Principal.enumAcciones.CARGAR_PANEL_HISTORICO.toString());
+		
+		this.vistaPrincipal.getPanelHistorico().getBtnAtras().addActionListener(this);
+		this.vistaPrincipal.getPanelHistorico().getBtnAtras()
+				.setActionCommand(Principal.enumAcciones.CARGAR_PANEL_WORKOUT.toString());
+		
+		
 
 	}
 
@@ -173,22 +172,101 @@ public class ControladorContacto implements ActionListener {
 	}
 
 	private boolean mIniciarSesion() throws Exception {
-		// TODO Auto-generated method stub
-		String email = this.vistaPrincipal.getPanelInicioSesion().getTxtFEmail().getText();
-		String contrasena = this.vistaPrincipal.getPanelInicioSesion().getTxtFContrasena().getText();
+	    String email = this.vistaPrincipal.getPanelInicioSesion().getTxtFEmail().getText();
+	    String contrasena = this.vistaPrincipal.getPanelInicioSesion().getTxtFContrasena().getText();
 
-		cliente = new Clientes();
-		workout = new Workouts();
-		boolean clienteValido = cliente.mVerificarCliente(email, contrasena);
+	    cliente = new Clientes();
+	    workout = new Workouts();
+	    backups = new Backups();
+	    
+	    boolean clienteValido = cliente.mVerificarCliente(email, contrasena);
 
-		if (clienteValido) {
-			// Si la autenticación es exitosa, recuperamos los datos del cliente
-			this.clienteActual = cliente.mObtenerDatosCliente(email);
-			return true;
-		} else {
-			return false;
-		}
+	    if (clienteValido) {
+	        // Si la autenticación es exitosa, recuperamos los datos del cliente
+	        this.clienteActual = cliente.mObtenerDatosCliente(email);
+
+	        // Cargar workouts
+	        ArrayList<Workouts> listaWorkouts = workout.mCargarWorkouts();
+	        // Cargar clientes
+	        ArrayList<Clientes> listaClientes = cliente.mCargarClientes(); // Cargar la lista de clientes
+
+	        // Verificar si los workouts se cargan correctamente
+	        if (listaWorkouts != null && !listaWorkouts.isEmpty()) {
+	            // Imprimir los workouts cargados
+	            for (Workouts w : listaWorkouts) {
+	                System.out.println("Workout ID: " + w.getIdWorkouts());
+	                System.out.println("Nombre: " + w.getNombreWorkout());
+	                System.out.println("Nivel: " + w.getNivelWorkout());
+	                System.out.println("Número de Ejercicios: " + w.getNumEjerWorkout());
+	                System.out.println("Video: " + w.getVideo());
+	                System.out.println("-----------------------------");
+
+	                // Obtener y mostrar los ejercicios de cada workout
+	                ArrayList<Ejercicios> listaEjercicios = w.getEjercicios(); // Método para obtener ejercicios
+	                if (listaEjercicios != null && !listaEjercicios.isEmpty()) {
+	                    for (Ejercicios e : listaEjercicios) {
+	                        System.out.println("  Ejercicio ID: " + e.getIdEjercicio());
+	                        System.out.println("  Nombre: " + e.getNombreEjer());
+	                        System.out.println("  Cronómetro: " + e.getCronometro());
+	                        System.out.println("  Descanso: " + e.getDescansoEjer());
+	                        System.out.println("  Descripción: " + e.getDescripcionEjer());
+	                        System.out.println("  -----------------------------");
+
+	                        // Obtener y mostrar las series de cada ejercicio
+	                        ArrayList<Series> listaSeries = e.getSeries(); // Método para obtener series
+	                        if (listaSeries != null && !listaSeries.isEmpty()) {
+	                            for (Series s : listaSeries) {
+	                                System.out.println("    Serie ID: " + s.getIdSerie());
+	                                System.out.println("    Nombre: " + s.getNombre());
+	                                System.out.println("    Número de repeticiones: " + s.getNumeroRepeticiones());
+	                                System.out.println("    Cuenta regresiva: " + s.getCuentaRegresiva());
+	                                System.out.println("    Foto: " + s.getFoto());
+	                                System.out.println("    -----------------------------");
+	                            }
+	                        } else {
+	                            System.out.println("    No se encontraron series para el ejercicio: " + e.getNombreEjer());
+	                        }
+	                    }
+	                } else {
+	                    System.out.println("  No se encontraron ejercicios para el workout: " + w.getNombreWorkout());
+	                }
+	            }
+
+	            // Guardar los workouts en el archivo .dat
+	            backups.guardarWorkouts(listaWorkouts);
+	        } else {
+	            System.out.println("No se encontraron workouts para guardar.");
+	        }
+
+	        // Imprimir la lista de clientes
+	        if (listaClientes != null && !listaClientes.isEmpty()) {
+	            System.out.println("Lista de Clientes:");
+	            for (Clientes c : listaClientes) {
+	                System.out.println("ID: " + c.getIdCliente());
+	                System.out.println("Nombre: " + c.getNombre());
+	                System.out.println("Apellido: " + c.getApellido());
+	                System.out.println("Email: " + c.getEmail());
+	                System.out.println("Fecha de Nacimiento: " + c.getFechaNa());
+	                System.out.println("Nivel de Usuario: " + c.getNivelUsuario());
+	                System.out.println("Es Entrenador: " + c.isEsEntrenador());
+	                System.out.println("-----------------------------");
+	            }
+
+	            // Guardar los clientes en el archivo .dat
+	            backups.guardarClientes(listaClientes); // Llamada al método para guardar clientes
+	        } else {
+	            System.out.println("No se encontraron clientes.");
+	        }
+
+	        return true; // Inicio de sesión exitoso
+	    } else {
+	        System.out.println("Email o contraseña incorrectos.");
+	        return false; // Inicio de sesión fallido
+	    }
 	}
+
+
+
 
 	private boolean mRegistro() throws Exception {
 		String email = this.vistaPrincipal.getPanelRegistro().getTxtFEmail().getText();
@@ -352,9 +430,11 @@ public class ControladorContacto implements ActionListener {
 									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
 											.setHorizontalTextPosition(SwingConstants.LEFT); // El texto a la izquierda
 									vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
-											.setVerticalTextPosition(SwingConstants.CENTER); // Imagen centrada verticalmente
+											.setVerticalTextPosition(SwingConstants.CENTER); // Imagen centrada
+																								// verticalmente
 
-									// Remover el MouseListener anterior (para que no se abran muchas pantallas de vidoe)
+									// Remover el MouseListener anterior (para que no se abran muchas pantallas de
+									// vidoe)
 									for (MouseListener listener : vistaPrincipal.getPanelWorkout()
 											.getLblDetallesWorkout().getMouseListeners()) {
 										vistaPrincipal.getPanelWorkout().getLblDetallesWorkout()
@@ -368,7 +448,10 @@ public class ControladorContacto implements ActionListener {
 												public void mouseClicked(MouseEvent e) {
 													try {
 														Desktop.getDesktop()
-																.browse(new URI(selectedWorkout.getVideo())); // Abre el enlace en el navegador
+																.browse(new URI(selectedWorkout.getVideo())); // Abre el
+																												// enlace
+																												// en el
+																												// navegador
 													} catch (Exception ex) {
 														ex.printStackTrace();
 													}
@@ -387,46 +470,46 @@ public class ControladorContacto implements ActionListener {
 		}
 	}
 
+	///////////// HISTORICO WORKOUTS ///////////////////////////////////
 	private void mCargarHistorico(Principal.enumAcciones accion) {
-		
+
 		Historico historico = new Historico();
-		
-	    mLimpiarTabla(accion);
 
-	    // Obtener los datos del histórico para el cliente dado
-	    ArrayList<Historico> listaHistorico = historico.mObtenerHistorico(clienteActual.getIdCliente());
-	    System.out.println("Número de históricos obtenidos: " + listaHistorico.size());
+		mLimpiarTabla(accion);
 
-	    for (int i = 0; i < listaHistorico.size(); i++) {
-	        System.out.println("Workout: " + listaHistorico.get(i).getNombreWorkout() + ", Nivel: " + listaHistorico.get(i).getNivelWorkout());
-	    }
-	  
+		// Obtener los datos del histórico para el cliente dado
+		ArrayList<Historico> listaHistorico = historico.mObtenerHistorico(clienteActual.getIdCliente());
+		System.out.println("Número de históricos obtenidos: " + listaHistorico.size());
 
-	    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-	    String matrizInfo[][] = new String[listaHistorico.size()][6];
+		for (int i = 0; i < listaHistorico.size(); i++) {
+			System.out.println("Workout: " + listaHistorico.get(i).getNombreWorkout() + ", Nivel: "
+					+ listaHistorico.get(i).getNivelWorkout());
+		}
 
-	    for (int i = 0; i < listaHistorico.size(); i++) {
-	        matrizInfo[i][0] = listaHistorico.get(i).getNombreWorkout();
-	        matrizInfo[i][1] = String.valueOf(listaHistorico.get(i).getNivelWorkout());
-	        matrizInfo[i][2] = String.valueOf(listaHistorico.get(i).getTiempoTotal());
-	        matrizInfo[i][3] = String.valueOf(listaHistorico.get(i).getTiempoPrevisto());
-	        Date fecha = listaHistorico.get(i).getFecha(); // Suponiendo que getFecha() devuelve un Date
-	        matrizInfo[i][4] = (fecha != null) ? sdf.format(fecha) : "Sin fecha";  // Formatear la fecha
-	        matrizInfo[i][5] = String.valueOf(listaHistorico.get(i).getEjerciciosRealizados());
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		String matrizInfo[][] = new String[listaHistorico.size()][6];
 
-	        switch (accion) {
-	        case CARGAR_PANEL_HISTORICO:
-	            this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().addRow(matrizInfo[i]);
-	            break;
-	        default:
-	            break;
-	        }
-	    }
+		for (int i = 0; i < listaHistorico.size(); i++) {
+			matrizInfo[i][0] = listaHistorico.get(i).getNombreWorkout();
+			matrizInfo[i][1] = String.valueOf(listaHistorico.get(i).getNivelWorkout());
+			matrizInfo[i][2] = String.valueOf(listaHistorico.get(i).getTiempoTotal());
+			matrizInfo[i][3] = String.valueOf(listaHistorico.get(i).getTiempoPrevisto());
+			Date fecha = listaHistorico.get(i).getFecha(); // Suponiendo que getFecha() devuelve un Date
+			matrizInfo[i][4] = (fecha != null) ? sdf.format(fecha) : "Sin fecha"; // Formatear la fecha
+			matrizInfo[i][5] = String.valueOf(listaHistorico.get(i).getEjerciciosRealizados());
+
+			switch (accion) {
+			case CARGAR_PANEL_HISTORICO:
+				this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().addRow(matrizInfo[i]);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
-	
 	private void mLimpiarTabla(Principal.enumAcciones accion) {
-		
+
 		switch (accion) {
 		case CARGAR_PANEL_HISTORICO:
 			if (this.vistaPrincipal.getPanelHistorico().getDefaultTableModel().getRowCount() > 0) {

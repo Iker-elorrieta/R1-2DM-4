@@ -1,5 +1,6 @@
 package modelo;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +10,12 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 
 import conexion.Conexion;
 
-public class Workouts {
+public class Workouts implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// *** Atributos ***
 	private String idWorkouts;
 	private double nivelWorkout;

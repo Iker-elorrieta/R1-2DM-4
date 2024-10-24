@@ -2,6 +2,7 @@ package modelo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -19,8 +21,12 @@ import com.google.cloud.firestore.QuerySnapshot;
 
 import conexion.Conexion;
 
-public class Clientes {
+public class Clientes implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// *** Atributos ***
 	private String idCliente;
 	private String nombre;
@@ -56,7 +62,6 @@ public class Clientes {
 
 	public Clientes(String nombre, String apellido, String email, String contrasena, Date fechaNa, double nivelUsuario,
 			boolean esEntrenador) {
-		super();
 		this.nombre = nombre;
 		this.apellido = apellido;
 		this.email = email;
@@ -144,6 +149,46 @@ public class Clientes {
 	}
 
 	// *** M�todos CRUD ***
+	public ArrayList<Clientes> mCargarClientes() { 
+	    Firestore db = null;
+	    try {
+	        db = Conexion.conectar();
+	        ArrayList<Clientes> listaClientes = new ArrayList<>();
+	        CollectionReference clientesRef = db.collection("Clientes");
+	        List<QueryDocumentSnapshot> clientesDocs = clientesRef.get().get().getDocuments();
+
+	        // Iterar a través de los documentos de los clientes
+	        for (QueryDocumentSnapshot clienteDoc : clientesDocs) {
+	            Clientes cliente = new Clientes();
+	            cliente.setIdCliente(clienteDoc.getId());
+	            cliente.setNombre(clienteDoc.getString(fieldNombre));
+	            cliente.setApellido(clienteDoc.getString(fieldApellido));
+	            cliente.setEmail(clienteDoc.getString(fieldEmail));
+	            cliente.setContrasena(clienteDoc.getString(fieldContraseña)); 
+	            
+	            // Aquí se obtiene `fechaNa`
+	            Timestamp timestamp = clienteDoc.getTimestamp(fieldFechaNa);
+	            if (timestamp != null) {
+	                // Convertir Timestamp a Date y asignar a fechaNa
+	                cliente.setFechaNa(timestamp.toDate()); // Asignar directamente a la propiedad
+	            } else {
+	                cliente.setFechaNa(null); // Manejo de caso donde no hay fecha
+	            }
+
+	            // Obtener el nivel de usuario y si es entrenador
+	            cliente.setNivelUsuario(clienteDoc.getDouble(fieldNivelUsuario)); 
+	            cliente.setEsEntrenador(clienteDoc.getBoolean(fieldEsEntrenador)); 
+
+	            listaClientes.add(cliente); 
+	        }
+
+	        return listaClientes;
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null; // Manejo de errores general
+	    }
+	}
 
 	public boolean mVerificarCliente(String emailIngresado, String contrasenaIngresada) throws Exception {
 		Firestore co = null;
@@ -210,7 +255,7 @@ public class Clientes {
 
 	public Clientes mInsertarCliente() throws Exception {
 		Firestore co = null;
-
+		
 		try {
 			co = Conexion.conectar();
 
